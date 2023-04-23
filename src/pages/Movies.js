@@ -1,9 +1,9 @@
 import React from 'react';
-import CustomPaginationActionsTable from '../components/MovieTable'
+import MoviesTable from '../components/MovieTable'
 
 function Movies() {
     return (
-        <CustomPaginationActionsTable/>
+        <MoviesTable/>
     );
 }
 

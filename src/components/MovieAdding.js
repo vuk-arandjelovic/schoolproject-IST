@@ -1,68 +1,166 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Button, TextField, Stack } from "@mui/material";
+import {
+	Typography,
+	Button,
+	TextField,
+	Stack,
+	Select,
+	MenuItem,
+	FormControl,
+	FormControlLabel,
+	Switch,
+	InputLabel,
+	Rating,
+} from "@mui/material";
+import { useParams, redirect } from "react-router-dom";
 
-const moviesLocal = JSON.parse(localStorage.getItem("movies"))
+const moviesLocal = JSON.parse(localStorage.getItem("movies"));
 
+function MovieAdding({ isEdit }) {
+	let { id: currentId } = useParams();
 
+	const [movies, setMovies] = useState(moviesLocal);
+	const [movie, setMovie] = useState();
+	const [error, setError] = useState();
 
-function MovieAdding(){
-    const [movies, setMovies] = useState(moviesLocal)
-    const [naziv, setNaziv] = useState();
-    const [ocena, setOcena] = useState();
-    const [reziser, setReziser] = useState();
-    const [trajanje, setTrajanje] = useState();
-    const [tride, setTride] = useState();
+	const handleData = (e, newValue) => {
+		setMovie({ ...movie, [e.target.name]: newValue || e.target.value });
+	};
 
-    const setMoviesHandle = (film) =>{
+	const dodajFilm = () => {
+		let _movies = movies || [];
+		let id = 0;
 
-        setMovies({film, ...movies})
-    }
+		if (_movies?.length > 0) {
+			id = _movies[_movies?.length - 1].id + 1;
+		}
 
-    const dodajFilm = ()=>{
-        if(naziv === undefined ||
-           ocena === undefined ||
-           reziser === undefined ||
-           trajanje === undefined ||
-           tride === undefined){
-            alert("Dodavanje filma neuspesno, morate popuniti sva polja")
-            return
-        }
-        if(naziv.trim().length === 0 || 
-        ocena.trim().length === 0 || 
-        reziser.trim().length === 0 || 
-        trajanje.trim().length === 0 || 
-        tride.trim().length === 0){
-            alert("Dodavanje filma neuspesno, morate popuniti sva polja")
-            return
-        }
-        console.log(movies)
-        console.log(naziv)
-        console.log(ocena)
-        console.log(reziser)
-        console.log(trajanje)
-        console.log(tride)
-        
-        const film = {naziv: naziv, ocena: ocena, reziser: reziser, trajanje: trajanje, tride: tride}
-        console.log(film)
+		if (
+			!movie?.naziv?.trim() ||
+			!movie?.reziser?.trim() ||
+			!movie?.trajanje?.trim() ||
+			!movie?.ocena
+		) {
+			alert(
+				`${
+					isEdit ? "Azuriranje" : "Dodavanje"
+				} filma neuspesno, morate popuniti sva polja`
+			);
+			return;
+		}
+		const is3D = movie?.tride === "jeste" ? true : false;
 
-        setMoviesHandle(film)
-    }
-    useEffect(()=>{
-        localStorage.setItem("movies", JSON.stringify(movies))
-    },[movies])
+		if (isEdit) {
+			// eslint-disable-next-line
+			_movies = _movies.filter((movie) => movie?.id != currentId);
+			setMovies([{ ...movie, tride: is3D }, ..._movies]);
+			redirect("/movies");
+			return;
+		}
 
-    return (<>
-        <Stack sx={{maxWidth:"800px"}} mx="auto" my="2rem" spacing={2}>
-            <Typography variant="h3" gutterBottom mx="auto">Dodavanje Filma</Typography>
-            <TextField id="outlined-basic" label="Naziv Filma" variant="outlined" onChange={(newValue)=>setNaziv(newValue.target.value)}></TextField>
-            <TextField id="outlined-basic" label="Ocena" variant="outlined" onChange={(newValue)=>setOcena(newValue.target.value)}></TextField>
-            <TextField id="outlined-basic" label="Reziser" variant="outlined" onChange={(newValue)=>setReziser(newValue.target.value)}></TextField>
-            <TextField id="outlined-basic" label="Trajanje" variant="outlined" onChange={(newValue)=>setTrajanje(newValue.target.value)}></TextField>
-            <TextField id="outlined-basic" label="3D" variant="outlined" onChange={(newValue)=>setTride(newValue.target.value)}></TextField>
-            <Button variant="contained" onClick={dodajFilm}>Dodaj Film</Button>
-        </Stack>
+		setMovies([..._movies, { ...movie, tride: is3D, id }]);
+		setMovie({});
+	};
 
-    </>)
+	useEffect(() => {
+		localStorage.setItem("movies", JSON.stringify(movies));
+	}, [movies]);
+
+	useEffect(() => {
+		if (!currentId) return;
+		if (!(movies?.length > 0)) {
+			setError("Ne postoje filmovi u bazi");
+			return;
+		}
+
+		// eslint-disable-next-line
+		const _movie = movies.find((movie) => movie.id == currentId);
+
+		if (!_movie) {
+			setError("Film nije pronadjen");
+			return;
+		}
+
+		setMovie(_movie);
+
+		// eslint-disable-next-line
+	}, [currentId]);
+
+	if (error) {
+		return (
+			<Stack sx={{ maxWidth: "800px" }} mx="auto" my="2rem" spacing={2}>
+				<Typography variant="h3" textAlign="center">
+					{error}
+				</Typography>
+			</Stack>
+		);
+	}
+
+	return (
+		<>
+			<Stack sx={{ maxWidth: "800px" }} mx="auto" my="2rem" spacing={2}>
+				<Typography variant="h3" gutterBottom mx="auto">
+					{isEdit ? "Izmeni film" : "Dodavanje Filma"}
+				</Typography>
+				<TextField
+					name="naziv"
+					value={movie?.naziv || ""}
+					label="Naziv Filma"
+					variant="outlined"
+					onChange={(e) => handleData(e)}
+				/>
+				<TextField
+					name="reziser"
+					value={movie?.reziser || ""}
+					label="Reziser"
+					variant="outlined"
+					onChange={(e) => handleData(e)}
+				/>
+				<TextField
+					name="trajanje"
+					value={movie?.trajanje || ""}
+					label="Trajanje"
+					variant="outlined"
+					onChange={(e) => handleData(e)}
+				/>
+				<FormControl fullWidth>
+					<InputLabel>3D</InputLabel>
+					<Select
+						name="tride"
+						value={movie?.tride || ""}
+						label="3D"
+						variant="outlined"
+						onChange={(e) => handleData(e)}
+					>
+						<MenuItem value="jeste">Jeste</MenuItem>
+						<MenuItem value="nije">Nije</MenuItem>
+					</Select>
+				</FormControl>
+
+				{/* <FormControlLabel
+					control={
+						<Switch
+							name="tride"
+							value={movie?.tride === "jeste"}
+							onChange={(e) => handleData(e)}
+						/>
+					}
+					label="3D"
+				/> */}
+				<Stack>
+					<InputLabel>Ocena</InputLabel>
+					<Rating
+						name="ocena"
+						value={movie?.ocena || 0}
+						onChange={handleData}
+					/>
+				</Stack>
+				<Button variant="contained" onClick={dodajFilm}>
+					Dodaj Film
+				</Button>
+			</Stack>
+		</>
+	);
 }
 
-export default MovieAdding
+export default MovieAdding;
