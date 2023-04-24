@@ -37,6 +37,7 @@ export default function MoviesTable() {
 		{
 			field: "reziser",
 			headerName: "Reziser",
+			width: 160,
 		},
 		{
 			field: "trajanje",
