@@ -69,10 +69,6 @@ function MovieAdding({ isEdit }) {
 		setMovies(moviesLocal);
 	}, []);
 
-	// useEffect(() => {
-	// 	localStorage.setItem("movies", JSON.stringify(movies));
-	// }, [movies]);
-
 	useEffect(() => {
 		if (!currentId || !isEdit) return;
 		if (!(movies?.length > 0)) {
@@ -145,17 +141,6 @@ function MovieAdding({ isEdit }) {
 						<MenuItem value="nije">Nije</MenuItem>
 					</Select>
 				</FormControl>
-
-				{/* <FormControlLabel
-					control={
-						<Switch
-							name="tride"
-							value={movie?.tride === "jeste"}
-							onChange={(e) => handleData(e)}
-						/>
-					}
-					label="3D"
-				/> */}
 				<Stack>
 					<InputLabel>Ocena</InputLabel>
 					<Rating
