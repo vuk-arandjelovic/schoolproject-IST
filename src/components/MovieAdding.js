@@ -12,12 +12,10 @@ import {
 } from "@mui/material";
 import { useParams, redirect } from "react-router-dom";
 
-const moviesLocal = JSON.parse(localStorage.getItem("movies"));
-
 function MovieAdding({ isEdit }) {
 	let { id: currentId } = useParams();
 
-	const [movies, setMovies] = useState(moviesLocal);
+	const [movies, setMovies] = useState();
 	const [movie, setMovie] = useState();
 	const [error, setError] = useState();
 
@@ -51,38 +49,51 @@ function MovieAdding({ isEdit }) {
 		if (isEdit) {
 			// eslint-disable-next-line
 			_movies = _movies.filter((movie) => movie?.id != currentId);
-			setMovies([{ ...movie, tride: is3D }, ..._movies]);
+			const newMovieList = [{ ...movie, tride: is3D }, ..._movies];
+
+			setMovies(newMovieList);
+			localStorage.setItem("movies", JSON.stringify(newMovieList));
 			redirect("/movies");
 			return;
 		}
 
-		setMovies([..._movies, { ...movie, tride: is3D, id }]);
+		const newMovieList = [..._movies, { ...movie, tride: is3D, id }];
+		setMovies(newMovieList);
+		localStorage.setItem("movies", JSON.stringify(newMovieList));
+
 		setMovie({});
 	};
 
 	useEffect(() => {
-		localStorage.setItem("movies", JSON.stringify(movies));
-	}, [movies]);
+		const moviesLocal = JSON.parse(localStorage.getItem("movies"));
+		setMovies(moviesLocal);
+	}, []);
+
+	// useEffect(() => {
+	// 	localStorage.setItem("movies", JSON.stringify(movies));
+	// }, [movies]);
 
 	useEffect(() => {
-		if (!currentId) return;
+		if (!currentId || !isEdit) return;
 		if (!(movies?.length > 0)) {
 			setError("Ne postoje filmovi u bazi");
 			return;
 		}
 
 		// eslint-disable-next-line
-		const _movie = movies.find((movie) => movie.id == currentId);
+		const _movie = movies?.find((movie) => movie.id == currentId);
 
 		if (!_movie) {
 			setError("Film nije pronadjen");
 			return;
 		}
 
+		setError(null)
+
 		setMovie(_movie);
 
 		// eslint-disable-next-line
-	}, [currentId]);
+	}, [currentId, movies]);
 
 	if (error) {
 		return (
