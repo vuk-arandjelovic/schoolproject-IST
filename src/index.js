@@ -14,7 +14,7 @@ export default function App() {
 							<Route
 								key={index}
 								index={route?.index}
-                				path={route?.path}
+                path={route?.path}
 								element={route?.component}
 							/>
 						))}

@@ -59,7 +59,7 @@ export default function MoviesTable() {
 			},
 		},
 		{
-			field: "astions",
+			field: "actions",
 			headerName: "",
 			width: 250,
 			renderCell: (params) => {
