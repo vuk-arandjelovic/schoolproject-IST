@@ -10,12 +10,13 @@ import {
 	InputLabel,
 	Rating,
 } from "@mui/material";
-import { useParams, redirect } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function MovieAdding({ isEdit }) {
 	let { id: currentId } = useParams();
+	const navigate = useNavigate();
 
-	const [movies, setMovies] = useState();
 	const [movie, setMovie] = useState();
 	const [error, setError] = useState();
 
@@ -23,19 +24,12 @@ function MovieAdding({ isEdit }) {
 		setMovie({ ...movie, [e.target.name]: newValue || e.target.value });
 	};
 
-	const dodajFilm = () => {
-		let _movies = movies || [];
-		let id = 0;
-
-		if (_movies?.length > 0) {
-			id = _movies[_movies?.length - 1].id + 1;
-		}
-
+	const dodajFilm = async () => {
 		if (
-			!movie?.naziv?.trim() ||
-			!movie?.reziser?.trim() ||
-			!movie?.trajanje?.trim() ||
-			!movie?.ocena
+			!movie?.title?.trim() ||
+			!movie?.director?.trim() ||
+			!movie?.length?.toString().trim() ||
+			!movie?.rating
 		) {
 			alert(
 				`${
@@ -44,52 +38,40 @@ function MovieAdding({ isEdit }) {
 			);
 			return;
 		}
-		const is3D = movie?.tride === "jeste" ? true : false;
+		const is3D = movie?.threeD === "jeste" ? true : false;
 
-		if (isEdit) {
-			// eslint-disable-next-line
-			_movies = _movies.filter((movie) => movie?.id != currentId);
-			const newMovieList = [{ ...movie, tride: is3D }, ..._movies];
 
-			setMovies(newMovieList);
-			localStorage.setItem("movies", JSON.stringify(newMovieList));
-			redirect("/movies");
-			return;
-		}
-
-		const newMovieList = [..._movies, { ...movie, tride: is3D, id }];
-		setMovies(newMovieList);
-		localStorage.setItem("movies", JSON.stringify(newMovieList));
-
-		setMovie({});
+		try {
+      if (isEdit) {
+        await axios.put(`http://localhost:3030/films/${currentId}`, { ...movie, threeD: is3D });
+        alert("Film je uspešno ažuriran");
+      	navigate("/movies");
+      } else {
+        await axios.post("http://localhost:3030/films", { ...movie, threeD: is3D });
+        alert("Film je uspešno dodat");
+        setMovie({});
+      }
+    } catch (error) {
+      console.error(error);
+    }
 	};
 
 	useEffect(() => {
-		const moviesLocal = JSON.parse(localStorage.getItem("movies"));
-		setMovies(moviesLocal);
-	}, []);
+    const fetchMovie = async () => {
+      if (isEdit && currentId) {
+        try {
+          const response = await axios.get(`http://localhost:3030/films/${currentId}`);
+          setMovie(response.data);
+          setError(null);
+        } catch (error) {
+          setError("Film nije pronadjen");
+          console.error(error);
+        }
+      }
+    };
 
-	useEffect(() => {
-		if (!currentId || !isEdit) return;
-		if (!(movies?.length > 0)) {
-			setError("Ne postoje filmovi u bazi");
-			return;
-		}
-
-		// eslint-disable-next-line
-		const _movie = movies?.find((movie) => movie.id == currentId);
-
-		if (!_movie) {
-			setError("Film nije pronadjen");
-			return;
-		}
-
-		setError(null)
-
-		setMovie(_movie);
-
-		// eslint-disable-next-line
-	}, [currentId, movies]);
+    fetchMovie();
+  }, [currentId, isEdit]);
 
 	if (error) {
 		return (
@@ -108,22 +90,22 @@ function MovieAdding({ isEdit }) {
 					{isEdit ? "Izmeni film" : "Dodavanje Filma"}
 				</Typography>
 				<TextField
-					name="naziv"
-					value={movie?.naziv || ""}
+					name="title"
+					value={movie?.title || ""}
 					label="Naziv Filma"
 					variant="outlined"
 					onChange={(e) => handleData(e)}
 				/>
 				<TextField
-					name="reziser"
-					value={movie?.reziser || ""}
+					name="director"
+					value={movie?.director || ""}
 					label="Reziser"
 					variant="outlined"
 					onChange={(e) => handleData(e)}
 				/>
 				<TextField
-					name="trajanje"
-					value={movie?.trajanje || ""}
+					name="length"
+					value={movie?.length || ""}
 					label="Trajanje"
 					variant="outlined"
 					onChange={(e) => handleData(e)}
@@ -131,8 +113,8 @@ function MovieAdding({ isEdit }) {
 				<FormControl fullWidth>
 					<InputLabel>3D</InputLabel>
 					<Select
-						name="tride"
-						value={movie?.tride || ""}
+						name="threeD"
+						value={movie?.threeD || ""}
 						label="3D"
 						variant="outlined"
 						onChange={(e) => handleData(e)}
@@ -144,13 +126,13 @@ function MovieAdding({ isEdit }) {
 				<Stack>
 					<InputLabel>Ocena</InputLabel>
 					<Rating
-						name="ocena"
-						value={movie?.ocena || 0}
+						name="rating"
+						value={movie?.rating || 0}
 						onChange={handleData}
 					/>
 				</Stack>
 				<Button variant="contained" onClick={dodajFilm}>
-					Dodaj Film
+				{isEdit ? "Izmeni Film" : "Dodaj Film"}
 				</Button>
 			</Stack>
 		</>

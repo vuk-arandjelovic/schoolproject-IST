@@ -6,28 +6,41 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import axios from "axios";
 
 export default function MoviesTable() {
 	const [movies, setMovies] = useState();
 
 	const handleDelete = (id) => {
-		const _movies = [...movies].filter((movie) => movie?.id !== id);
-		setMovies(_movies)
-		localStorage.setItem("movies", JSON.stringify(_movies));
+		axios.delete(`http://localhost:3030/films/${id}`)
+    .then(() => {
+      const updatedMovies = movies.filter((movie) => movie?.id !== id);
+      setMovies(updatedMovies);
+    })
+    .catch((error) => {
+      console.error("Error deleting movie:", error);
+    });
 	};
 
 	useEffect(() => {
-		setMovies(JSON.parse(localStorage.getItem("movies")));
+		axios.get("http://localhost:3030/films")
+    .then((response) => {
+			const moviesWithId = response.data.map(movie => ({ ...movie, id: movie._id }));
+      setMovies(moviesWithId);
+    })
+    .catch((error) => {
+      console.error("Error fetching movies:", error);
+    });
 	}, []);
 
 	const columns = [
 		{
-			field: "naziv",
+			field: "title",
 			headerName: "Naziv",
 			flex: 1,
 		},
 		{
-			field: "ocena",
+			field: "rating",
 			headerName: "Ocena",
 			width: 160,
 			renderCell: (params) => {
@@ -35,16 +48,16 @@ export default function MoviesTable() {
 			},
 		},
 		{
-			field: "reziser",
+			field: "director",
 			headerName: "Reziser",
 			width: 160,
 		},
 		{
-			field: "trajanje",
+			field: "length",
 			headerName: "Trajanje",
 		},
 		{
-			field: "tride",
+			field: "threeD",
 			headerName: "3D",
 			renderCell: (params) => {
 				return (
